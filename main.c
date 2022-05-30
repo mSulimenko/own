@@ -1,12 +1,8 @@
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <stdarg.h>
 #include <math.h>
 #include <getopt.h>
-
-#define PNG_DEBUG 3
 #include <png.h>
 
 struct Png{
@@ -132,9 +128,7 @@ void write_png_file(char *file_name, struct Png *image) {
         printf("Error during init_io\n");
         return;
     }
-
     png_init_io(image->png_ptr, fp);
-
 
     /* write header */
     if (setjmp(png_jmpbuf(image->png_ptr))){
@@ -156,7 +150,6 @@ void write_png_file(char *file_name, struct Png *image) {
     }
 
     png_write_image(image->png_ptr, image->row_pointers);
-
 
     /* end write */
     if (setjmp(png_jmpbuf(image->png_ptr))){
@@ -250,9 +243,7 @@ void inter(struct Png *image, int x1, int y1, int x2, int y2, struct rgba Color)
         for (x = 0; x < image->width; x++) {
             png_byte *ptr = &(row[x * 4]);
             if((x>=x1)&&(x<=x2)&&(y>=y1)&&(y<=y2)){
-                ptr[0] = Color.r;
-                ptr[1] = Color.g;
-                ptr[2] = Color.b;
+                ptr[0] = Color.r;ptr[1] = Color.g;ptr[2] = Color.b;ptr[3]=Color.a;
             }
         }
     }
@@ -272,24 +263,16 @@ void drawRectangle(struct Png *image,int x1,int y1, int x2, int y2, int w, struc
         for (x = 0; x < image->width; x++) {
             png_byte *ptr = &(row[x * 4]);
             if((y >= y1 - w)&&(y <= y1 + w)&&(x <= x2 + w)&&(x >= x1 - w)){   //верхняя
-                ptr[0] = lnColor.r;
-                ptr[1] = lnColor.g;
-                ptr[2] = lnColor.b;
+                ptr[0] = lnColor.r;ptr[1] = lnColor.g;ptr[2] = lnColor.b;ptr[3]=lnColor.a;
             }
             if((y >= y2 - w)&&(y <= y2 + w)&&(x<=x2+w)&&(x>=x1-w)){   //нижняя
-                ptr[0] = lnColor.r;
-                ptr[1] = lnColor.g;
-                ptr[2] = lnColor.b;
+                ptr[0] = lnColor.r;ptr[1] = lnColor.g;ptr[2] = lnColor.b;ptr[3]=lnColor.a;
             }
             if((x >= x1 - w)&&(x <= x1 + w)&&(y<=y2)&&(y>=y1)){   //левая
-                ptr[0] = lnColor.r;
-                ptr[1] = lnColor.g;
-                ptr[2] = lnColor.b;
+                ptr[0] = lnColor.r;ptr[1] = lnColor.g;ptr[2] = lnColor.b;ptr[3]=lnColor.a;
             }
             if((x >= x2 - w)&&(x <= x2 + w)&&(y<=y2)&&(y>=y1)){   //правая
-                ptr[0] = lnColor.r;
-                ptr[1] = lnColor.g;
-                ptr[2] = lnColor.b;
+                ptr[0] = lnColor.r;ptr[1] = lnColor.g;ptr[2] = lnColor.b;ptr[3]=lnColor.a;
             }
 
         }
@@ -298,29 +281,6 @@ void drawRectangle(struct Png *image,int x1,int y1, int x2, int y2, int w, struc
         inter(image, x1+w, y1+w, x2-w, y2-w, inColor);
     }
 }
-void clear_file(struct Png *image) {
-    int x,y;
-    if (png_get_color_type(image->png_ptr, image->info_ptr) == PNG_COLOR_TYPE_RGB){
-        // Some error handling: input file is PNG_COLOR_TYPE_RGB but must be PNG_COLOR_TYPE_RGBA
-    }
-
-    if (png_get_color_type(image->png_ptr, image->info_ptr) != PNG_COLOR_TYPE_RGBA){
-        // Some error handling: color_type of input file must be PNG_COLOR_TYPE_RGBA
-    }
-
-    int w = 5;
-    for (y = 0; y < image->height; y++) {
-        png_byte *row = image->row_pointers[y];
-        for (x = 0; x < image->width; x++) {
-            png_byte *ptr = &(row[x * 4]);
-            ptr[0] = 255;
-            ptr[1] = 255;
-            ptr[2] = 255;
-            ptr[3] = 255;
-        }
-    }
-}
-
 
 void drawLine(struct Png *image, int x1, int y1, int x2, int y2, int w, struct rgba color) {
     int x,y;
@@ -385,81 +345,72 @@ void drawLine(struct Png *image, int x1, int y1, int x2, int y2, int w, struct r
 
 void drawCircle(struct Png* image, int x, int y, int r, int w, struct rgba color)
 {
-    int x1,y1,yk = 0;                       //проверить: 1. радиус больше толщины
+    int x1,y1,yk = 0;
     int sigma,delta,f;
     png_byte *ptr;
 
     x1 = 0;
     y1 = r;
     delta = 2*(1-r);
-
-    do
-    {
+    do{
         for(int i = 0; i < w; i++){
             ptr = &(image->row_pointers[y+y1][(x+x1+i) * 4]);  //4 четверть
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
             ptr = &(image->row_pointers[y+y1][(x+x1-i) * 4]);
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
             ptr = &(image->row_pointers[y+y1+i][(x+x1) * 4]);
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
             ptr = &(image->row_pointers[y+y1-i][(x+x1) * 4]);
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
 
             ptr = &(image->row_pointers[y+y1][(x-x1+i) * 4]);  //3 четверть
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
             ptr = &(image->row_pointers[y+y1][(x-x1-i) * 4]);
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
             ptr = &(image->row_pointers[y+y1+i][(x-x1) * 4]);
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
             ptr = &(image->row_pointers[y+y1-i][(x-x1) * 4]);
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
 
             ptr = &(image->row_pointers[y-y1][(x+x1+i) * 4]);  //1 четверть
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
             ptr = &(image->row_pointers[y-y1][(x+x1-i) * 4]);
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
             ptr = &(image->row_pointers[y-y1+i][(x+x1) * 4]);
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
             ptr = &(image->row_pointers[y-y1-i][(x+x1) * 4]);
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
 
             ptr = &(image->row_pointers[y-y1][(x-x1+i) * 4]);  //2 четверть
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
             ptr = &(image->row_pointers[y-y1][(x-x1-i) * 4]);
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
             ptr = &(image->row_pointers[y-y1+i][(x-x1) * 4]);
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
             ptr = &(image->row_pointers[y-y1-i][(x-x1) * 4]);
-            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;
-
+            ptr[0] = color.r;ptr[1] = color.g;ptr[2] = color.b;ptr[3] = color.a;
         }
 
         f = 0;
         if (y1 < yk)
             break;
-        if (delta < 0)
-        {
+        if (delta < 0){
             sigma = 2*(delta+y1)-1;
-            if (sigma <= 0)
-            {
+            if (sigma <= 0){
                 x1++;
                 delta += 2*x1+1;
                 f = 1;
             }
         }
-        else
-        if (delta > 0)
-        {
+        else if (delta > 0){
             sigma = 2*(delta-x1)-1;
-            if (sigma > 0)
-            {
+            if (sigma > 0){
                 y1--;
                 delta += 1-2*y1;
                 f = 1;
             }
         }
-        if(!f)
-        {
+        if(!f){
             x1++;
             y1--;
             delta += 2*(x1-y1-1);
@@ -527,7 +478,6 @@ void flood(struct Png* image, int x, int y, struct rgba newColor, struct rgba ou
         if(!isSimilar(cur, outColor)){
             flood(image, x, y-1, newColor, outColor);
         }
-
     }
 }
 
@@ -563,10 +513,15 @@ void hexagon(struct Png* image, int x, int y, int r, int w, struct rgba outColor
         flood(image, x, y, inColor, outColor);
 }
 
-void reflection(struct Png *image, int x1, int y1, int x2, int y2, int side){
+int reflection(struct Png *image, int x1, int y1, int x2, int y2, int side){
     write_png_file_copy("NewTestTemporaryPngFile.png", image);
     struct Png image_copy;
     read_png_file("NewTestTemporaryPngFile.png", &image_copy);
+
+    if((x1<0)||(x1>=image_copy.width)||(x2<0)||(x2>=image_copy.width)||(y1<0)||(y1>=image_copy.height)||(y2<0)||(y2>=image_copy.height)){
+      printf("Error: x1 y1 x2 y2 should be less than resolution H & W\n");
+      return 1;
+    }
 
     if(side == 0){    //Горизонтально
         for(int y = 0; y <=y2-y1; y++){
@@ -589,86 +544,32 @@ void reflection(struct Png *image, int x1, int y1, int x2, int y2, int side){
     }
     write_png_file("NewTestTemporaryPngFile.png", &image_copy);
 
-
     if (remove("NewTestTemporaryPngFile.png") ==-1)
         printf("Error during deleting temporary file\n");
-}
-
-void new(struct Png *image){
-    write_png_file_copy("NewTestTemporaryPngFile.png", image);
-    struct Png image_copy;
-    read_png_file("NewTestTemporaryPngFile.png", &image_copy);
-
-    int n_height = 100; int x, y;
-    int n_width = 200;
-
-
-    png_byte **arr = (png_bytep *) malloc(sizeof(png_bytep) * n_height);
-    for (y = 0; y < n_height; y++)
-        arr[y] = (png_byte *) malloc(sizeof(png_byte) * n_width * 4);
-
-
-    for (y = 0; y < n_height; y++) {
-        png_byte *n_row = arr[y];
-        for (x = 0; x < n_width; x++) {
-            png_byte *n_pix = &(n_row[x * 4]);
-            n_pix[0]=100;
-            n_pix[1]=100;
-            n_pix[2]=100;
-            n_pix[3]=255;
-
-        }
-    }
-
-
-    for (y = 0; y < n_height; y++) {
-        png_byte *n_row = arr[y];
-        for (x = 0; x < n_width; x++) {
-            png_byte *n_pix = &(n_row[x * 4]);
-            n_pix[0]=255;
-            n_pix[1]=255;
-            n_pix[2]=0;
-            n_pix[3]=255;
-        }
-    }
-
-
-    image_copy.row_pointers=arr;
-    image_copy.width=100;
-    image_copy.height=100;
-
-    write_png_file("NewTestTemporaryPngFile1.png", &image_copy);
-
-
+    return 0;
 }
 
 
 struct Configs{
-
     int x1, y1, x2, y2;
     int  r, g, b, a, r2, g2, b2, a2;
     int i, horizon, t;
     int ctrX, ctrY, rad;
     int rectangle, circle, pentagram, hexagon;
-
 };
-
 
 void printHelp(){
     printf("getopt example\n");
-    printf("-r --reflection <value> -s --start x1,y1 -e --end x2,y2 - Отражение заданной области. В пункт value впишите 1, если отражение относительно горизонтальной оси, 0 - относительно вертикальной)\n");
-    printf("-p --pentagram -c --circle <ctrX,ctrY,rad> -s --start x1,y1 -e --end x2 -t --thick <value> -g --rgb <r,g,b,a> - нарисовать пентаграму. Введите либо координаты ее центра и радиусом окружности(-с)\n");
+    printf("-r --reflection <value> -s --start x1,y1 -e --end x2,y2 <file_in> <file_out>- Отражение заданной области. В пункт value впишите 1, если отражение относительно горизонтальной оси, 0 - относительно вертикальной)\n");
+    printf("-p --pentagram -c --circle <ctrX,ctrY,rad> -s --start x1,y1 -e --end x2 -t --thick <value> -g --rgb <r,g,b,a> <file_in> <file_out>- нарисовать пентаграму. Введите либо координаты ее центра и радиусом окружности(-с)\n");
     printf("либо координаты левого верхнего и правого нижнего угла квадрата, в который вписана окружность пентаграммы(-s -e). Но нужно выбрать что-то одно. Значение по умолчанию - окружность.\n");
-    printf("-l --rectangle -s --start x1,y1 -e --end x2,y2 -t --thick <value> -g --rgb <r,g,b,a> -i --interior <r2,g2,b2,a>- Рисование прямоугольника. Если хотите, чтобы он был залит, введите компоненты r2,g2,b2,a2\n");
-    printf("-x --hexagon -c --circle <ctrX,ctrY,rad> -s --start x1,y1 -e --end x2 -t --thick <value> -g --rgb <r,g,b,a> -i --interior <r2,g2,b2,a> - нарисовать пентаграму. Введите либо координаты ее центра и радиусом окружности(-с)\n");
+    printf("-l --rectangle -s --start x1,y1 -e --end x2,y2 -t --thick <value> -g --rgb <r,g,b,a> -i --interior <r2,g2,b2,a> <file_in> <file_out> - Рисование прямоугольника. Если хотите, чтобы он был залит, введите компоненты r2,g2,b2,a2\n");
+    printf("-x --hexagon -c --circle <ctrX,ctrY,rad> -s --start x1,y1 -e --end x2 -t --thick <value> -g --rgb <r,g,b,a> -i --interior <r2,g2,b2,a> <file_in> <file_out> - нарисовать пентаграму. Введите либо координаты ее центра и радиусом окружности(-с)\n");
     printf("либо координаты левого верхнего и правого нижнего угла квадрата, в который вписана окружность пентаграммы(-s -e). Но нужно выбрать что-то одно. Значение по умолчанию - окружность.Если хотите, чтобы он был залит, введите компоненты r2,g2,b2,a2\n");
 
 }
 
-
-
 int main(int argc, char **argv) {
-
     struct Configs config = {0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0};
     char *opts = "r:g:i:s:e:pc:li:t:xh?";
     struct option longOpts[] = {
@@ -681,13 +582,11 @@ int main(int argc, char **argv) {
             {"circle",     required_argument, NULL, 'c'},
             {"rectangle",  no_argument,       NULL, 'l'},
             {"interior",   required_argument, NULL, 'i'},
-            //{ "rgb2", required_argument, NULL, 'w' },
             {"thick",      no_argument,       NULL, 't'},
             {"hexagon",    no_argument,       NULL, 'h'},
             {"help",       no_argument,       NULL, 'h'},
             {NULL,         no_argument,       NULL, 0}
     };
-
     int opt;
     int longIndex;
     int count;
@@ -758,8 +657,6 @@ int main(int argc, char **argv) {
                     return 0;
                 }
                 break;
-
-
             case 'c':
                 count = 0;
                 numbers = strtok(optarg, ",");
@@ -831,11 +728,10 @@ int main(int argc, char **argv) {
         return 0;
 
     if(((config.horizon == 0) || (config.horizon == 1)) + (config.pentagram == 1) + (config.rectangle == 1) + (config.hexagon == 1) > 1){
-        printf("Вы можете выбрать только 1 функцию");
+        printf("Error: You can choose only 1 function");
         printHelp();
         return 0;
     }
-
     if ((config.horizon == 0) || (config.horizon == 1)) {
         if (config.x1 < 0 || config.x2 < 0 || config.y1 < 0 || config.y2 < 0) {
             printf("Error: x1 y1 x2 y2 should be greater than zero\n");
@@ -846,7 +742,9 @@ int main(int argc, char **argv) {
             printf("Error: x1 y1 x2 y2 should be less than resolution H & W\n");
             return 0;
         }
-        reflection(&image, config.x1, config.y1, config.x2, config.y2, config.horizon);
+        if(reflection(&image, config.x1, config.y1, config.x2, config.y2, config.horizon) == 1){
+            return 0;
+        }
     }
 
 
@@ -868,10 +766,12 @@ int main(int argc, char **argv) {
             printf("Error: the size is too large\n");
             return 0;
         }
-
-
             if (config.x1 && config.y1 && config.x2 && config.y2) {
-                if (config.x1 >= config.x2 || config.y1 <= config.y2) {
+                if (config.x1 >= config.x2 || config.y1 >= config.y2) {
+                    printf("Error: corners of square are set incorrectly\n");
+                    return 0;
+                }
+                if ((config.x1 - config.x2) != (config.y1 - config.y2)) {
                     printf("Error: corners of square are set incorrectly\n");
                     return 0;
                 }
@@ -884,21 +784,21 @@ int main(int argc, char **argv) {
                     printf("Error: x1 y1 x2 y2 should be less than resolution H & W\n");
                     return 0;
                 }
-
-                if (config.t / 2 + config.x2 > image.width ||
-                    config.t / 2 + config.y1 > image.height ||
-                    config.x1 - config.t / 2 < 0 ||
-                    config.y2 - config.t / 2 < 0) {
+                if (config.t  + config.x2 > image.width ||
+                    -config.t  + config.y1 > image.height ||
+                    config.x1 - config.t  < 0 ||
+                    config.y2 + config.t  < 0) {
                     printf("Error: going beyond the border of picture\n");
                     return 0;
                 }
                 int r = (config.x2 - config.x1) / 2;
-                int x = config.x1 + config.r;
-                int y = config.y1 + config.r;
+                int x = config.x1 + r;
+                int y = config.y1 + r;
                 struct rgba color = {config.r, config.g, config.b, config.a};
 
+
                 pentax(&image, x, y, r, config.t, color);
-            }                   //Окружность
+            }
             else {
                 int x1 = config.ctrX - config.rad;
                 int x2 = config.ctrX + config.rad;
@@ -926,7 +826,6 @@ int main(int argc, char **argv) {
             }
         }
 
-
     if (config.rectangle == 1) {
         if (config.r < 0 || config.g < 0 || config.b < 0 || config.a < 0 ) {  //|| config.r2 < 0 || config.g2 < 0 || config.b2 < 0 || config.a2 < 0
             printf("Error: rgb should be greater than or equal to 0\n");
@@ -945,11 +844,11 @@ int main(int argc, char **argv) {
             printf("Error: the size is too large\n");
             return 0;
         }
-
         if (config.x1 >= config.x2 || config.y1 >= config.y2) {
             printf("Error: corners of rectangle are set incorrectly\n");
             return 0;
         }
+
         if (config.x1 < 0 || config.x2 < 0 || config.y1 < 0 || config.y2 < 0) {
             printf("Error: x1 y1 x2 y2 should be greater than 0\n");
             return 0;
@@ -959,17 +858,15 @@ int main(int argc, char **argv) {
             printf("Error: x1 y1 x2 y2 should be less than resolution H & W\n");
             return 0;
         }
-
-        if (config.t / 2 + config.x2 > image.width ||
-            config.t / 2 + config.y1 > image.height ||
-            config.x1 - config.t / 2 < 0 ||
-            config.y2 - config.t / 2 < 0) {
+        if (config.t  + config.x2 > image.width ||
+            -config.t  + config.y1 > image.height ||
+            config.x1 - config.t  < 0 ||
+            config.y2 + config.t < 0) {
             printf("Error: going beyond the border of picture\n");
             return 0;
         }
 
         struct rgba lnColor = {config.r, config.g, config.b, config.a};
-
         if(config.i == 0){
             drawRectangle(&image, config.x1, config.y1, config.x2, config.y2, config.t, lnColor, 0, lnColor);
         }
@@ -1006,9 +903,8 @@ int main(int argc, char **argv) {
             return 0;
         }
 
-
         if (config.x1 && config.y1 && config.x2 && config.y2) {
-            if (config.x1 >= config.x2 || config.y1 <= config.y2) {
+            if (config.x1 >= config.x2 || config.y1 >= config.y2) {
                 printf("Error: corners of square are set incorrectly\n");
                 return 0;
             }
@@ -1030,26 +926,26 @@ int main(int argc, char **argv) {
                 return 0;
             }
             int r = (config.x2 - config.x1) / 2;
-            int x = config.x1 + config.r;
-            int y = config.y1 + config.r;
+            int x = config.x1 + r;
+            int y = config.y1 + r;
             struct rgba lnColor = {config.r, config.g, config.b, config.a};
+
 
             if(config.i == 0){
                 hexagon(&image, x, y, r, config.t, lnColor, 0, lnColor);
             }
             else{
-            if (config.r2 < 0 || config.g2 < 0 || config.b2 < 0 || config.a2 < 0 ) {
-                printf("Error: rgb should be greater than or equal to 0\n");
-                return 0;
+                if (config.r2 < 0 || config.g2 < 0 || config.b2 < 0 || config.a2 < 0 ) {
+                    printf("Error: rgb should be greater than or equal to 0\n");
+                    return 0;
+                }
+                if (config.r2 < 0 || config.g2 < 0 || config.b2 < 0 || config.a2 < 0) {
+                    printf("Error: rgb should be less than or equal to 255\n");
+                    return 0;
+                }
+                struct rgba inColor = {config.r2, config.g2, config.b2, config.a2};
+                    hexagon(&image, x, y, r, config.t, lnColor, 1, inColor);
             }
-            if (config.r2 < 0 || config.g2 < 0 || config.b2 < 0 || config.a2 < 0) {
-                printf("Error: rgb should be less than or equal to 255\n");
-                return 0;
-            }
-            struct rgba inColor = {config.r2, config.g2, config.b2, config.a2};
-                hexagon(&image, x, y, r, config.t, lnColor, 1, inColor);
-        }
-
         }                   //Окружность
         else {
             int x1 = config.ctrX - config.rad;
@@ -1091,10 +987,7 @@ int main(int argc, char **argv) {
             }
         }
     }
-
-
     write_png_file(argv[1], &image);
 
     return 0;
-
 }
